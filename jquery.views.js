@@ -291,7 +291,11 @@ this.jQuery && jQuery.link || (function(global, undefined) {
 				}
 			}
 			parentView.link(data, containerEl, context, prevNode, nextNode, index);
-		}
+		} else if (typeof(container)=="string") {
+			throw container +": does not select a DOM element.";
+		} else {
+			throw "No DOM element selected.";
+                }
 		return container; // Allow chaining, to attach event handlers, etc.
 	}
 
