@@ -137,7 +137,7 @@
 		// TODO call onBeforeChange on data-link initialization.
 		//    if ( changed && context.onAfterChange ) {
 		//        context.onAfterChange.call( link, ev, eventArgs );
-		//			}
+		//    }
 
 		if ((!onBeforeChange || !(eventArgs && onBeforeChange.call(linkCtx, ev, eventArgs) === FALSE))
 		// If data changed, the ev.data is set to be the path. Use that to filter the handler action...
@@ -155,7 +155,7 @@
 			if (attr === "visible") {
 				attr = "css-display";
 				sourceValue = sourceValue
-					// Make sure we set the correct display style for showing this particular element ("block", "inlin" etc.)
+				// Make sure we set the correct display style for showing this particular element ("block", "inlin" etc.)
 					? getElementDefaultDisplay(target)
 					: "none";
 			}
@@ -189,7 +189,7 @@
 						}
 					}
 					if (target.type === CHECKBOX) {
-							attr = "checked";
+						attr = "checked";
 						// We will set the "checked" attribute
 						sourceValue = sourceValue ? attr : undefined;
 						// We will compare this ("checked"/undefined) with the current value
@@ -202,7 +202,7 @@
 							parent.insertBefore(document.createTextNode(sourceValue), next);
 							parent.removeChild(next);
 						}
-						} else {
+					} else {
 						parent.insertBefore(document.createTextNode(sourceValue), next);
 					}
 				}
@@ -269,8 +269,8 @@
 	}
 
 	function setArrayChangeLink(view) {
-			var handler,
-				data = view.data,
+		var handler,
+			data = view.data,
 			onArrayChange = view._onArrayChange,
 			leafBindings = view._leafBnd;
 
@@ -290,7 +290,7 @@
 						// If view.data is undefined, do nothing. (Corresponds to case where there is another handler on the same data whose
 						// effect was to remove this view, and which happened to precede this event in the trigger sequence. So although this
 						// event has been removed now, it is still called since already on the trigger sequence)
-					arrayChangeHandler.apply(view, arguments);
+						arrayChangeHandler.apply(view, arguments);
 					}
 				};
 				$([data]).on(arrayChangeStr, handler);
@@ -307,12 +307,12 @@
 		// Merge in the default attribute bindings for this target element
 		var attr = $views.merge[elem.nodeName.toLowerCase()];
 		return attr
-		? (to
-			? attr.to.toAttr
-			: attr.from.fromAttr)
-		: to
-			? "text" // Default is to bind to innerText. Use html{:...} to bind to innerHTML
-			: ""; // Default is not to bind from
+			? (to
+				? attr.to.toAttr
+				: attr.from.fromAttr)
+			: to
+				? "text" // Default is to bind to innerText. Use html{:...} to bind to innerHTML
+				: ""; // Default is not to bind from
 	}
 
 	function returnVal(value) {
@@ -368,76 +368,11 @@
 					targetEl = placeholderParent;
 				} else {
 					prevNode = nextNode = undefined; // When linking from a template, prevNode and nextNode parameters are ignored
-					container.empty().append(html); // Supply non-jQuery version of this...
-					// Using append, rather than html, as workaround for issues in IE compat mode. (Using innerHTML leads to initial comments being stripped)
+					replaceContent($(targetEl), html);
 				}
-			}
-			parentView.link(data, containerEl, context, prevNode, nextNode, index);
-		} else if (typeof(container)=="string") {
-			throw container +": does not select a DOM element.";
-		} else {
-			throw "No DOM element selected.";
-                }
-		return container; // Allow chaining, to attach event handlers, etc.
-	}
-
-	function bindDataLinkAttributes(node, currentView, data) {
-		var links, attr, linkIndex, convertBack, cbLength, expression, viewData, prev,
-			linkMarkup = node.getAttribute($viewsLinkAttr);
-
-		if (linkMarkup) {
-			linkIndex = currentView._lnk++;
-			// Compiled linkFn expressions are stored in the tmpl.links array of the template
-			// TODO - consider also caching globally so that if {{:foo}} or data-link="foo" occurs in different places, the compiled template for this is cached and only compiled once...
-			links = currentView.links || currentView.tmpl.links;
-			if (!(link = links[linkIndex])) {
-				link = links[linkIndex] = {};
-				if (linkMarkup.charAt(linkMarkup.length - 1) !== "}") {
-					// Simplified syntax is used: data-link="expression"
-					// Convert to data-link="{:expression}", or for inputs, data-link="{:expression:}" for (default) two-way binding
-					linkMarkup = delimOpenChar1 + ":" + linkMarkup + (defaultAttr(node) ? ":" : "") + delimCloseChar0;
-				}
-				while (tokens = rTag.exec(linkMarkup)) { // TODO require } to be followed by whitespace or $, and remove the \}(!\}) option.
-					// Iterate over the data-link expressions, for different target attrs, e.g. <input data-link="{:firstName:} title{>~description(firstName, lastName)}"
-					// tokens: [all, attr, tag, converter, colon, html, code, linkedParams]
-					attr = tokens[1];
-					expression = tokens[2];
-					if (tokens[5]) {
-						// Only for {:} link"
-						if (!attr && (convertBack = /^.*:([\w$]*)$/.exec(tokens[8]))) {
-							// two-way binding
-							convertBack = convertBack[1];
-							if (cbLength = convertBack.length) {
-								// There is a convertBack function
-								expression = tokens[2].slice(0, -cbLength - 1) + delimCloseChar0; // Remove the convertBack string from expression.
-							}
-						}
-						if (convertBack === NULL) {
-							convertBack = undefined;
-						}
-					}
-					// Compile the linkFn expression which evaluates and binds a data-link expression
-					// TODO - optimize for the case of simple data path with no conversion, helpers, etc.:
-					//     i.e. data-link="a.b.c". Avoid creating new instances of Function every time. Can use a default function for all of these...
-					link[attr] = $views._tmplFn(delimOpenChar0 + expression + delimCloseChar1, undefined, TRUE);
-					if (!attr && convertBack !== undefined) {
-						link[attr].to = convertBack;
-					}
-				}
-			}
-			viewData = currentView.data;
-			for (attr in link) {
-				bindDataLinkTarget(
-					data || currentView.data, //source
-					node,                     //target
-					attr,                     //attr
-					link[attr],               //compiled link markup expression
-					currentView               //view
-				);
-			}
 			} else if (tmplOrLinkTag !== TRUE) {
 				return;
-		}
+			}
 			// Link the content of the element, since this is a call to template.link(), or to $(el).link(true, ...),
 			parentView.link(from, context, targetEl, prevNode, nextNode, index);
 		});
@@ -445,7 +380,7 @@
 	}
 
 	function bindDataLinkTarget(binding, jsvData, linkCtx, view, linkFn, incremental) {
-		//Add data link bindings for a link expression in data-link attribute markup
+		// Add data link bindings for a link expression in data-link attribute markup
 
 		function bindFn(object, leafToken) {
 			// Binding callback called on each dependent object (parameter) that the link expression depends on.
@@ -500,7 +435,7 @@
 			if (activeBody) {
 				$(activeBody).off(elementChangeStr, elemChangeHandler);
 				activeBody = undefined;
-	}
+			}
 			tmplOrLinkTag = TRUE;
 			to = document.body;
 		}
@@ -514,7 +449,7 @@
 					i = elems.length;
 					while (i--) {
 						clean(elems[i]);
-	}
+					}
 				});
 			} else if (tmplOrLinkTag === undefined) {
 				// Call to $(el).unlink()
@@ -545,8 +480,8 @@
 									if (cbLength = convertBack.length) {
 										// There is a convertBack function
 										tagExpr = tagExpr.slice(0, -cbLength - 1) + delimCloseChar0; // Remove the convertBack string from expression.
-			}
-		}
+									}
+								}
 							}
 							if (binding = linkTags[attr + tagExpr]) {
 								if (removeLinkTarget(binding, from)) {
@@ -627,12 +562,12 @@
 							if (cbLength = convertBack.length) {
 								// There is a convertBack function
 								tagExpr = tagExpr.slice(0, -cbLength - 1) + delimCloseChar0; // Remove the convertBack string from expression.
-				}
-			}
+							}
+						}
 						if (convertBack === NULL) {
 							convertBack = undefined;
+						}
 					}
-				}
 					// Compile the linkFn expression which evaluates and binds a data-link expression
 					// TODO - optimize for the case of simple data path with no conversion, helpers, etc.:
 					//     i.e. data-link="a.b.c". Avoid creating new instances of Function every time. Can use a default function for all of these...
@@ -640,10 +575,10 @@
 					linkTags[linkTag] = linkFn = $views._tmplFn(delimOpenChar0 + tagExpr + delimCloseChar1, undefined, TRUE);
 					if (!attr && convertBack !== undefined) {
 						linkFn.to = convertBack;
-			}
+					}
 					linkFn.attr = attr;
-		}
-	}
+				}
+			}
 			for (linkTag in linkTags) {
 				linkFn = linkTags[linkTag];
 				bindDataLinkTarget(
@@ -663,8 +598,8 @@
 				);
 			}
 			return bindings;
-			}
 		}
+	}
 
 	function addLinkAnnotations(value, tmpl, props, key) {
 		var elemAnnotation, attr,
@@ -985,15 +920,15 @@
 				viewsCount = views.length + dataItems.length;
 
 				if (renderAndLink(self, index, tmpl, views, dataItems, self.ctx, TRUE) !== FALSE) {
-				while (++index < viewsCount) {
-					$observable(views[index]).setProperty("index", index);
-					// TODO - this is fixing up index, but not key, and not index on child views. Consider changing index to be a getter index(),
-					// so we only have to change it on the immediate child view of the Array view, but also so that it notifies all subscriber to #index().
-					// Also have a #context() which can be parameterized to give #parents[#parents.length-1].data or #roots[0]
-					// to get root data, or other similar context getters. Only create an the index on the child view of Arrays, (whether in JsRender or JsViews)
-					// [Otherwise, here, would need to iterate on views[] to set index on children, right down to ArrayViews, which might be too expensive on perf].
+					while (++index < viewsCount) {
+						$observable(views[index]).setProperty("index", index);
+						// TODO - this is fixing up index, but not key, and not index on child views. Consider changing index to be a getter index(),
+						// so we only have to change it on the immediate child view of the Array view, but also so that it notifies all subscriber to #index().
+						// Also have a #context() which can be parameterized to give #parents[#parents.length-1].data or #roots[0]
+						// to get root data, or other similar context getters. Only create an the index on the child view of Arrays, (whether in JsRender or JsViews)
+						// [Otherwise, here, would need to iterate on views[] to set index on children, right down to ArrayViews, which might be too expensive on perf].
+					}
 				}
-			}
 			}
 			return self;
 		},
@@ -1010,42 +945,42 @@
 					nextNode = viewToRemove._nextNode;
 					nodesToRemove = node
 						? [node]
-						// viewToRemove._prevNode is null: this is a view using element annotations, so we will remove the top-level nodes
+					// viewToRemove._prevNode is null: this is a view using element annotations, so we will remove the top-level nodes
 						: viewToRemove.nodes;
 
-				// If parElVws is passed in, this is an 'Array View', so all child views have same parent element
+					// If parElVws is passed in, this is an 'Array View', so all child views have same parent element
 					// Otherwise, the views are by key, and there may be intervening parent elements, so get parentElViews
 					// for each child view that is being removed
-				parElVws = parElVws || jsViewsData(viewToRemove.parentElem, viewStr);
+					parElVws = parElVws || jsViewsData(viewToRemove.parentElem, viewStr);
 
-				i = parElVws.length;
+					i = parElVws.length;
 
-				if (i) {
-					// remove child views of the view being removed
+					if (i) {
+						// remove child views of the view being removed
 						viewToRemove.removeViews(undefined, undefined, keepNodes);
-				}
+					}
 
-				// Remove this view from the parentElViews collection
-				while (i--) {
-					if (parElVws[i] === viewToRemove) {
-						parElVws.splice(i, 1);
-						break;
+					// Remove this view from the parentElViews collection
+					while (i--) {
+						if (parElVws[i] === viewToRemove) {
+							parElVws.splice(i, 1);
+							break;
+						}
 					}
-				}
-				// Remove the HTML nodes from the DOM, unless they have already been removed
+					// Remove the HTML nodes from the DOM, unless they have already been removed
 					if (!keepNodes) {
-				while (node && node.parentNode && node !== nextNode) {
-					node = node.nextSibling;
-					nodesToRemove.push(node);
-				}
-				if (viewToRemove._after) {
-					nodesToRemove.push(viewToRemove._after);
-				}
-				$(nodesToRemove).remove();
+						while (node && node.parentNode && node !== nextNode) {
+							node = node.nextSibling;
+							nodesToRemove.push(node);
+						}
+						if (viewToRemove._after) {
+							nodesToRemove.push(viewToRemove._after);
+						}
+						$(nodesToRemove).remove();
 					}
-				viewToRemove.data = undefined;
-				setArrayChangeLink(viewToRemove);
-			}
+					viewToRemove.data = undefined;
+					setArrayChangeLink(viewToRemove);
+				}
 			}
 
 			var current, viewsCount, parentElViews,
@@ -1113,7 +1048,7 @@
 		_onDataChanged: function(eventArgs) {
 			if (eventArgs) {
 				// This is an observable action (not a trigger/handler call from pushValues, or similar, for which eventArgs will be null)
-			var self = this,
+				var self = this,
 					action = eventArgs.change,
 					index = eventArgs.index,
 					items = eventArgs.items;
@@ -1209,59 +1144,59 @@
 			}
 
 			// Step up through parents to find an element which is a views container, or if none found, store the top-level view on the body
-				while (!(parentElViews = jsViewsData(finish = node.parentNode || body, viewStr)).length) {
-					if (!finish || node === body) {
+			while (!(parentElViews = jsViewsData(finish = node.parentNode || body, viewStr)).length) {
+				if (!finish || node === body) {
 					getOrCreateJsViewsData(body, viewStr).push(topView);
 					return topView;
-					}
-					node = finish;
 				}
+				node = finish;
+			}
 
-				if (parentElViews.elLinked) {
-					i = parentElViews.length;
-					while (i--) {
-						view = parentElViews[i];
-						j = view.nodes && view.nodes.length;
-						while (j--) {
-							if (view.nodes[j] === node) {
+			if (parentElViews.elLinked) {
+				i = parentElViews.length;
+				while (i--) {
+					view = parentElViews[i];
+					j = view.nodes && view.nodes.length;
+					while (j--) {
+						if (view.nodes[j] === node) {
+							return view;
+						}
+					}
+				}
+			} else while (node) {
+				// Step back through the nodes, until we find an item or tmpl open tag - in which case that is the view we want
+				if (node === finish) {
+					return view;
+				}
+				if (node.nodeType === 8) {
+					if (/^jsv\/[it]$/.test(node.nodeValue)) {
+						// A tmpl or item close tag: <!--/tmpl--> or <!--/item-->
+						i = parentElViews.length;
+						while (i--) {
+							view = parentElViews[i];
+							if (view._nextNode === node) {
+								// If this was the node originally passed in, this is the view we want.
+								if (node === startNode) {
+									return view;
+								}
+								// If not, jump to the beginning of this item/tmpl and continue from there
+								node = view._prevNode;
+								break;
+							}
+						}
+					} else if (rStartTag.test(node.nodeValue)) {
+						// A tmpl or item open tag: <!--tmpl--> or <!--item-->
+						i = parentElViews.length;
+						while (i--) {
+							view = parentElViews[i];
+							if (view._prevNode === node) {
 								return view;
 							}
 						}
 					}
-				} else while (node) {
-					// Step back through the nodes, until we find an item or tmpl open tag - in which case that is the view we want
-					if (node === finish) {
-						return view;
-					}
-					if (node.nodeType === 8) {
-						if (/^jsv\/[it]$/.test(node.nodeValue)) {
-							// A tmpl or item close tag: <!--/tmpl--> or <!--/item-->
-							i = parentElViews.length;
-							while (i--) {
-								view = parentElViews[i];
-								if (view._nextNode === node) {
-									// If this was the node originally passed in, this is the view we want.
-									if (node === startNode) {
-										return view;
-									}
-									// If not, jump to the beginning of this item/tmpl and continue from there
-									node = view._prevNode;
-									break;
-								}
-							}
-						} else if (rStartTag.test(node.nodeValue)) {
-							// A tmpl or item open tag: <!--tmpl--> or <!--item-->
-							i = parentElViews.length;
-							while (i--) {
-								view = parentElViews[i];
-								if (view._prevNode === node) {
-									return view;
-								}
-							}
-						}
-					}
-					node = node.previousSibling;
 				}
+				node = node.previousSibling;
+			}
 			// If not within any of the views in the current parentElViews collection,
 			// move up through parent nodes to and look for view in parentElViews collection
 			return $view(finish);
@@ -1291,14 +1226,14 @@
 			return $unlink(expr, this, from);
 		},
 		view: function() {
-		return $view(this[0]);
-	}
+			return $view(this[0]);
+		}
 	});
 
 	// Initialize default delimiters
 	$views.delimiters();
 
-	$extend(topView, { tmpl: {}, _lnk: 0, links: []});
+	$extend(topView, { tmpl: {}, _lnk: 0, links: [] });
 	$extend(topView, LinkedView);
 
 })(this, this.jQuery);
